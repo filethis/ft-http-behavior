@@ -1,34 +1,127 @@
-<link rel="import" href="../polymer/polymer.html">
-
-<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
-
 <!--
-`ft-http-behavior`
-A behavior that provides HTTP requests using Promises.
+Copyright 2017 FileThis, Inc.
 
-@demo demo/index.html
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 -->
 
-<dom-module id="ft-http-behavior">
 
-    <style include="iron-flex iron-flex-alignment"></style>
+<link rel="import" href="../polymer/polymer.html">
 
-    <template>
+<link rel="import" href="../ft-error-behavior/ft-error-behavior.html">
 
-        <div>
-            ft-http-behavior
-        </div>
+<script>
 
-    </template>
+    /**
+     * `ft-http-behavior`
+     * A behavior that provides HTTP requests using Promises.
+     * @demo demo/index.html
+     * @polymerBehavior FtHttpBehavior
+     */
 
-    <script>
-        Polymer({
+    FtHttpBehavior = {
 
-            is: 'ft-http-behavior',
+        httpGet: function(url, options)
+        {
+            const nullBody = null;
+            return this.http('GET', url, nullBody, options)
+        },
 
-            properties: {
-            }
+        httpPut: function(url, body, options)
+        {
+            return this.http('PUT', url, body, options)
+        },
 
-        });
-    </script>
-</dom-module>
+        httpPost: function(url, body, options)
+        {
+            return this.http('POST', url, body, options)
+        },
+
+        httpDelete: function(url, options)
+        {
+            const nullBody = null;
+            return this.http('DELETE', url, nullBody, options)
+        },
+
+        http: function(method, url, body, options)
+        {
+            return new Promise(function(resolve, reject)
+            {
+                const description = method + " " + url;
+
+                var request = new XMLHttpRequest();
+
+                request.overrideMimeType("application/json");
+
+                request.open(method, url, true);
+
+                // Add any given headers
+                if (options && options.headers)
+                {
+                    const headers = options.headers;
+                    Object.keys(headers).forEach(function(name)
+                    {
+                        const value = headers[name];
+                        request.setRequestHeader(name, value);
+                    });
+                }
+
+                // On getting a response from the server
+                request.onload = function()
+                {
+                    // If the request was successful
+                    if (request.status >= "200" && request.status < 300)
+                    {
+                        // Get the result from the response body
+                        var responseText = request.responseText;
+                        var result;
+                        try
+                        {
+                            result = JSON.parse(responseText);
+                        }
+                        catch (exception)
+                        {
+                            result = responseText;
+                        }
+
+                        // Resolve our promise with the result
+                        resolve(result);
+                    }
+                    else // the request failed
+                    {
+                        // Reject our promise, returning an Error instance describing the problem
+                        var message = description + " failed" +
+                            "\n\nRequest: " + description +
+                            "\n\nServer returned: \"" + request.statusText + "\"";
+                        reject(new Error(message));
+                    }
+                }.bind(this);
+
+                // On failing to get a response from the server
+                request.onerror = function(message, url, lineNumber, columnNumber, errorObject)
+                {
+                    // Reject our promise, returning an Error instance describing the problem
+                    message = description + " failed\n" + message;
+                    var error = this.createErrorFromValues(message, url, lineNumber, columnNumber, errorObject);
+                    reject(error);
+                }.bind(this);
+
+                // Make the request
+                if (body == null)
+                    request.send();
+                else
+                    request.send(body);
+            }.bind(this));
+        }
+    }
+
+</script>

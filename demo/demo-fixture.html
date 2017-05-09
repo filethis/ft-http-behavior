@@ -2,7 +2,10 @@
 
 <!-- Imports -->
 <link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../../paper-button/paper-button.html">
+<link rel="import" href="../../iron-flex-layout/iron-flex-layout-classes.html">
 
+<link rel="import" href="../ft-error-behavior.html">
 <link rel="import" href="../ft-http-behavior.html">
 
 
@@ -18,7 +21,17 @@ A behavior that provides HTTP requests using Promises.
 
     <template>
 
-        <ft-http-behavior></ft-http-behavior>
+        <!-- GET Success -->
+        <div class="layout vertical center">
+            <paper-button raised on-click="_getSuccess">GET Success</paper-button>
+        </div>
+
+        <div style="height:20px"></div>
+
+        <!-- GET Failure -->
+        <div class="layout vertical center">
+            <paper-button raised on-click="_getFailure">GET Failure</paper-button>
+        </div>
 
     </template>
 
@@ -28,8 +41,32 @@ A behavior that provides HTTP requests using Promises.
         ({
             is: 'demo-fixture',
 
-            properties:
+            behaviors: [FtErrorBehavior, FtHttpBehavior],
+
+            _getFailure: function()
             {
+                this.httpGet("https://filethis.com/foo")
+                    .then(function(result)
+                    {
+                        alert(result);
+                    }.bind(this))
+                    .catch(function(error)
+                    {
+                        this.handleCaughtError(error);
+                    }.bind(this));
+            },
+
+            _getSuccess: function()
+            {
+                this.httpGet(window.location)
+                    .then(function(result)
+                    {
+                        alert(result);
+                    }.bind(this))
+                    .catch(function(error)
+                    {
+                        this.handleCaughtError(error);
+                    }.bind(this));
             }
 
         });

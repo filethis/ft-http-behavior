@@ -50,9 +50,9 @@ A behavior that provides HTTP requests using Promises.
                     {
                         alert(result);
                     }.bind(this))
-                    .catch(function(error)
+                    .catch(function(reason)
                     {
-                        this.handleCaughtError(error);
+                        this.handleCaughtError(reason);
                     }.bind(this));
             },
 
@@ -63,9 +63,9 @@ A behavior that provides HTTP requests using Promises.
                     {
                         alert(result);
                     }.bind(this))
-                    .catch(function(error)
+                    .catch(function(reason)
                     {
-                        this.handleCaughtError(error);
+                        this.handleCaughtError(reason);
                     }.bind(this));
             }
 

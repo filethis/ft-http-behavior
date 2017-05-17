@@ -64,15 +64,28 @@ limitations under the License.
 
                 request.open(method, url, true);
 
-                // Add any given headers
-                if (options && options.headers)
+                // Handle options
+                var contentTypeWasSetExplicitly = false;
+                if (options)
                 {
-                    const headers = options.headers;
-                    Object.keys(headers).forEach(function(name)
+                    // Add any given headers
+                    if (options.headers)
                     {
-                        const value = headers[name];
-                        request.setRequestHeader(name, value);
-                    });
+                        const headers = options.headers;
+                        Object.keys(headers).forEach(function(name)
+                        {
+                            const value = headers[name];
+                            request.setRequestHeader(name, value);
+
+                            if (name.toLowerCase() == "content-type")
+                                contentTypeWasSetExplicitly = true;
+                        });
+                    }
+
+                    // Allow credentials?
+                    const withCredentials = options.withCredentials;
+                    if (withCredentials != null && withCredentials != undefined)
+                        request.withCredentials = withCredentials;
                 }
 
                 // On getting a response from the server
@@ -115,11 +128,38 @@ limitations under the License.
                     reject(error);
                 }.bind(this);
 
+                // If a body was given, stringify it and make sure the Content-Type header is set
+                var bodyAsString;
+                if (body)
+                {
+                    var contentType;
+
+                    if (typeof body === "string")
+                    {
+                        bodyAsString = body;
+                        contentType = "text/plain; charset=utf-8";
+                    }
+                    else if (typeof body === "object")
+                    {
+                        bodyAsString = JSON.stringify(body);
+                        contentType = "application/json; charset=utf-8";
+                    }
+                    else
+                    {
+                        throw Error("Unhandled request body type");
+                    }
+
+                    // Set the content type, unless the caller explicitly specified it
+                    if (!contentTypeWasSetExplicitly)
+                        request.setRequestHeader("Content-Type", contentType);
+                }
+
                 // Make the request
-                if (body == null)
-                    request.send();
+                if (body)
+                    request.send(bodyAsString);
                 else
-                    request.send(body);
+                    request.send();
+
             }.bind(this));
         }
     }

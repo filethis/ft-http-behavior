@@ -3,7 +3,7 @@
     "description": "A behavior that provides HTTP requests using Promises.",
     "main": "ft-http-behavior.html",
     "dependencies": {
-        "polymer": "Polymer/polymer#^1.4.0",
+        "polymer": "Polymer/polymer#^1.9.0",
         "ft-error-behavior": "filethis/ft-error-behavior#^0.0.1"
     },
     "devDependencies": {

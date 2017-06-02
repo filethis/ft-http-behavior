@@ -21,6 +21,18 @@ limitations under the License.
 
 <script>
 
+    /* Specialize Error class to represent non-200 responses so that callers can handle them specially */
+
+    function FtHttpUnsuccessfulError(message, status, response)
+    {
+        this.message = message;
+        this.status = status;
+        this.response = response;
+    }
+
+    FtHttpUnsuccessfulError.prototype = new Error();
+
+
     /**
      * `ft-http-behavior`
      * A behavior that provides HTTP requests using Promises.
@@ -30,29 +42,29 @@ limitations under the License.
 
     FtHttpBehavior = {
 
+        httpPost: function(url, body, options)
+        {
+            return this._http('POST', url, body, options)
+        },
+
         httpGet: function(url, options)
         {
             const nullBody = null;
-            return this.http('GET', url, nullBody, options)
+            return this._http('GET', url, nullBody, options)
         },
 
         httpPut: function(url, body, options)
         {
-            return this.http('PUT', url, body, options)
-        },
-
-        httpPost: function(url, body, options)
-        {
-            return this.http('POST', url, body, options)
+            return this._http('PUT', url, body, options)
         },
 
         httpDelete: function(url, options)
         {
             const nullBody = null;
-            return this.http('DELETE', url, nullBody, options)
+            return this._http('DELETE', url, nullBody, options)
         },
 
-        http: function(method, url, body, options)
+        _http: function(method, url, body, options)
         {
             return new Promise(function(resolve, reject)
             {
@@ -60,103 +72,146 @@ limitations under the License.
 
                 var request = new XMLHttpRequest();
 
-                request.overrideMimeType("application/json");
-
                 request.open(method, url, true);
 
+                var contentType = null;
+                var accept = null;
+                var responseType = null;
+
                 // Handle options
-                var contentTypeWasSetExplicitly = false;
                 if (options)
                 {
-                    // Add any given headers
+                    // Headers
                     if (options.headers)
                     {
                         const headers = options.headers;
                         Object.keys(headers).forEach(function(name)
                         {
                             const value = headers[name];
-                            request.setRequestHeader(name, value);
 
-                            if (name.toLowerCase() == "content-type")
-                                contentTypeWasSetExplicitly = true;
+                            switch (name.toLowerCase())
+                            {
+                                case "content-type":
+                                    contentType = value;
+                                    break;
+
+                                case "accept":
+                                    accept = value;
+                                    break;
+
+                                default:
+                                    request.setRequestHeader(name, value);  // Add any other header immediately
+                                    break;
+                            }
                         });
                     }
 
-                    // Allow credentials?
-                    const withCredentials = options.withCredentials;
-                    if (withCredentials != null && withCredentials != undefined)
-                        request.withCredentials = withCredentials;
+                    // withCredentials
+                    const optionWithCredentials = options.withCredentials;
+                    if (!!optionWithCredentials)
+                        request.withCredentials = optionWithCredentials;
+
+                    // responseType
+                    const optionResponseType = options.responseType;
+                    if (!!optionResponseType)
+                        responseType = optionResponseType;
                 }
 
                 // On getting a response from the server
                 request.onload = function()
                 {
-                    // If the request was successful
-                    if (request.status >= "200" && request.status < 300)
+                    const status = request.status;
+                    const statusText = request.statusText;
+
+                    // If the server told us we were successful
+                    if (status >= 200 && status < 300)
                     {
-                        // Get the result from the response body
-                        var responseText = request.responseText;
-                        var result;
-                        try
+                        // Get the response
+                        var response;
+                        switch (request.responseType.toLowerCase())
                         {
-                            result = JSON.parse(responseText);
-                        }
-                        catch (exception)
-                        {
-                            result = responseText;
+                            case "blob":
+                            case "json":
+                                response = request.response;
+                                break;
+
+                            case "text":
+                            default:
+                                response = request.responseText;
+                                break;
                         }
 
-                        // Resolve our promise with the result
-                        resolve(result);
+                        // Resolve our promise with the response
+                        resolve(response);
                     }
-                    else // the request failed
+                    else // the server told us we failed
                     {
-                        // Reject our promise, returning an Error instance describing the problem
+                        // Build a message string that standard error handlers can display
                         var message = description + " failed" +
                             "\n\nRequest: " + description +
-                            "\n\nServer returned: \"" + request.statusText + "\"";
-                        reject(new Error(message));
+                            "\n\nstatusText: \"" + statusText + "\"";
+
+                        // Create our specialized error (derived from the "Error" class) which includes the server response
+                        var error = new FtHttpUnsuccessfulError(message, status, response);
+
+                        // Reject our promise with our specialized error instance
+                        reject(error);
                     }
                 }.bind(this);
 
-                // On failing to get a response from the server
+                // On communications/network failure
                 request.onerror = function(message, url, lineNumber, columnNumber, errorObject)
                 {
-                    // Reject our promise, returning an Error instance describing the problem
+                    // Create an Error instance describing the problem
                     message = description + " failed\n" + message;
                     var error = this.createErrorFromValues(message, url, lineNumber, columnNumber, errorObject);
+
+                    // Reject our promise with the Error instance
                     reject(error);
                 }.bind(this);
 
-                // If a body was given, stringify it and make sure the Content-Type header is set
-                var bodyAsString;
+                // If a request body is given, stringify it, if necessary, and take care of the Content-Type header
                 if (body)
                 {
-                    var contentType;
-
-                    if (typeof body === "string")
+                    if (body instanceof FormData)
                     {
-                        bodyAsString = body;
-                        contentType = "text/plain; charset=utf-8";
+                        // We let XMLHttpRequest.send() create and add the Content-Type header. It will add a
+                        // "multipart/form-data" header with "boundary" string appended to it.
+                        contentType = null;
                     }
                     else if (typeof body === "object")
                     {
-                        bodyAsString = JSON.stringify(body);
+                        // Assume JSON
                         contentType = "application/json; charset=utf-8";
+                        body = JSON.stringify(body);
                     }
                     else
                     {
-                        throw Error("Unhandled request body type");
+                        contentType = "text/plain; charset=utf-8";
                     }
 
-                    // Set the content type, unless the caller explicitly specified it
-                    if (!contentTypeWasSetExplicitly)
+                    // Add a Content-Type header, but only if one has been given, or inferred. (See FormData, above.)
+                    if (!!contentType)
                         request.setRequestHeader("Content-Type", contentType);
                 }
 
+                // Let the Accept type default to JSON
+                if (!accept)
+                    accept = "application/json; charset=utf-8";
+
+                // Let the responseType default to JSON
+                if (!responseType)
+                    responseType = "json";
+
+                // Add an Accept header
+                request.setRequestHeader("Accept", accept);
+
+                // Set the responseType
+                request.responseType = responseType;
+
                 // Make the request
                 if (body)
-                    request.send(bodyAsString);
+                    request.send(body);
                 else
                     request.send();
 

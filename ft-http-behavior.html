@@ -123,24 +123,26 @@ limitations under the License.
                     const status = request.status;
                     const statusText = request.statusText;
 
+                    // Get the response, if there is one
+                    var response = null;
+                    switch (request.responseType.toLowerCase())
+                    {
+                        case "blob":
+                        case "json":
+                            if (!!request.response)
+                                response = request.response;
+                            break;
+
+                        case "text":
+                        default:
+                            if (!!request.responseText)
+                                response = request.responseText;
+                            break;
+                    }
+
                     // If the server told us we were successful
                     if (status >= 200 && status < 300)
                     {
-                        // Get the response
-                        var response;
-                        switch (request.responseType.toLowerCase())
-                        {
-                            case "blob":
-                            case "json":
-                                response = request.response;
-                                break;
-
-                            case "text":
-                            default:
-                                response = request.responseText;
-                                break;
-                        }
-
                         // Resolve our promise with the response
                         resolve(response);
                     }

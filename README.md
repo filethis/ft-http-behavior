@@ -2,4 +2,18 @@
 
 ### \<ft-http-behavior\>
 
-A behavior that provides HTTP requests using Promises.
+This behavior  provides "Promisified" HTTP requests. By default it expects JSON responses, which it deserializes, but this is configurable.
+
+An example which gets the full list of all websites (sources) from which FileThis can fetch documents:
+
+    getSources: function()
+    {
+        var url = this.server + this.apiPath +
+            "/sources";
+        var options = this._buildHttpOptions();
+        return this.httpGet(url, options)
+            .then(function(sources)
+            {
+                this.sources = sources;
+            }.bind(this));
+    },

@@ -3,6 +3,7 @@ NAME=ft-http-behavior
 VERSION=0.0.10
 LOCAL_PORT=3648
 GITHUB_USER=filethis
+GITHUB_USER_ABBREV=ft
 
 # Project targets
 include project-element.make

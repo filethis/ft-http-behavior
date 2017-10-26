@@ -48,7 +48,10 @@ A behavior that provides HTTP requests using Promises.
         ({
             is: 'demo-fixture',
 
-            behaviors: [FileThis.ErrorBehavior, FileThis.HttpBehavior],
+            behaviors: [
+                FileThis.ErrorBehavior,
+                FileThis.HttpBehavior
+            ],
 
             _getFailure: function()
             {

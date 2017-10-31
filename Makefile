@@ -1,6 +1,6 @@
 # Project configuration
 NAME=ft-http-behavior
-VERSION=0.0.14
+VERSION=0.0.15
 LOCAL_PORT=3648
 GITHUB_USER=filethis
 GITHUB_USER_ABBREV=ft

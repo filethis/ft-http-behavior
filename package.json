@@ -1,7 +1,7 @@
 {
   "description": "A behavior that provides HTTP requests using Promises.",
-  "name": "filethis/ft-http-behavior",
-  "version": "filethis/1.0.22",
+  "name": "ft-http-behavior",
+  "version": "1.0.22",
   "resolutions": {
     "inherits": "2.0.3",
     "samsam": "1.1.3",

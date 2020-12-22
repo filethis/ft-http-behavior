@@ -1,7 +1,7 @@
 # Project configuration
 NAME=ft-http-behavior
 SRC_DIR=
-VERSION=1.0.22
+VERSION=3.0.0
 LOCAL_PORT=3648
 GITHUB_USER=filethis
 GITHUB_USER_ABBREV=ft

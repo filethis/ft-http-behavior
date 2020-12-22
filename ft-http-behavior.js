@@ -18,7 +18,7 @@ limitations under the License.
   from HTML and may be out of place here. Review them and
   then delete this comment!
 */
-import 'ft-error-behavior/ft-error-behavior.js';
+import '@filethis/ft-error-behavior/ft-error-behavior.js';
 
 import '@polymer/polymer/polymer-legacy.js';
 

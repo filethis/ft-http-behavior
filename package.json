@@ -1,6 +1,6 @@
 {
   "description": "A behavior that provides HTTP requests using Promises.",
-  "name": "ft-http-behavior",
+  "name": "@filethis/ft-http-behavior",
   "version": "1.0.22",
   "resolutions": {
     "inherits": "2.0.3",
@@ -15,7 +15,6 @@
     "*.make",
     "*.png",
     "*.svg",
-    ".yalc/",
     "data/",
     "demo/",
     "test/",
@@ -31,9 +30,9 @@
     "@polymer/paper-button": "^3.0.0",
     "@polymer/paper-dialog": "^3.0.0",
     "@polymer/polymer": "^3.0.0",
-    "ft-confirmation-dialog": "file:.yalc/ft-confirmation-dialog",
-    "ft-element-demo": "file:.yalc/ft-element-demo",
-    "ft-error-behavior": "file:.yalc/ft-error-behavior"
+    "@filethis/ft-confirmation-dialog": "^1.0.24",
+    "@filethis/ft-element-demo": "^1.0.15",
+    "@filethis/ft-error-behavior": "^1.0.22"
   },
   "devDependencies": {
     "@polymer/iron-component-page": "^4.0.0",
